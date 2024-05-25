@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Path Optimizer</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #a6c8ec;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #1a69a4;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #1a69a4;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #135a8d;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        #plot {
+            margin-top: 20px;
+        }
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+            border-radius: 5px;
+        }
+        .error {
+            color: #ff4d4d;
+            font-weight: bold;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Flight Path Optimizer</h1>
+    <form id="flight-form">
+        <label for="current-lat">Current Latitude (-90 to 90):</label>
+        <input type="number" id="current-lat" name="current-lat" min="-90" max="90" step="0.000001" required>
+        <label for="current-lon">Current Longitude (-180 to 180):</label>
+        <input type="number" id="current-lon" name="current-lon" min="-180" max="180" step="0.000001" required>
+        <label for="altitude">Altitude (ft):</label>
+        <input type="number" id="altitude" name="altitude" min="0" step="1" required>
+        <button type="submit">Optimize Path</button>
+    </form>
+    <div id="result"></div>
+    <div class="loading">
+        <img src="loading.gif" alt="Loading...">
+    </div>
+    <h2>Path Plot</h2>
+    <form id="path-form">
+        <label for="source-lat">Source Latitude (-90 to 90):</label>
+        <input type="number" id="source-lat" name="source-lat" min="-90" max="90" step="0.000001" required>
+        <label for="source-lon">Source Longitude (-180 to 180):</label>
+        <input type="number" id="source-lon" name="source-lon" min="-180" max="180" step="0.000001" required>
+        <label for="dest-lat">Destination Latitude (-90 to 90):</label>
+        <input type="number" id="dest-lat" name="dest-lat" min="-90" max="90" step="0.000001" required>
+        <label for="dest-lon">Destination Longitude (-180 to 180):</label>
+        <input type="number" id="dest-lon" name="dest-lon" min="-180" max="180" step="0.000001" required>
+        <button type="submit">Plot Path</button>
+    </form>
+    <div id="plot">
+        <div id="flight-details"></div>
+        <iframe id="path-map" src="" style="display:none;"></iframe>
+    </div>
+    <script>
+        $(document).ready(function() {
+            $('#flight-form').on('submit', function(event) {
+                event.preventDefault();
+                const currentLat = $('#current-lat').val();
+                const currentLon = $('#current-lon').val();
+                const altitude = $('#altitude').val();
+                
+                // Reset error messages
+                $('.error').remove();
+                
+                // Show loading indicator
+                $('.loading').show();
+                
+                $.ajax({
+                    url: '/predict',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        current_lat: currentLat,
+                        current_lon: currentLon,
+                        altitude: altitude
+                    }),
+                    success: function(response) {
+                        const actionDescriptions = ["Turn Left", "Turn Right", "Ascend", "Descend"];
+                        $('#result').html(`<strong>Recommended action:</strong> ${actionDescriptions[response.action]}`);
+                    },
+                    error: function(error) {
+                        $('#result').html(`<div class="error">${error.responseJSON.error}</div>`);
+                    },
+                    complete: function() {
+                        // Hide loading indicator
+                        $('.loading').hide();
+                    }
+                });
+            });
+
+            $('#path-form').on('submit', function(event) {
+                event.preventDefault();
+                const sourceLat = $('#source-lat').val();
+                const sourceLon = $('#source-lon').val();
+                const destLat = $('#dest-lat').val();
+                const destLon = $('#dest-lon').val();
+                
+                // Reset error messages
+                $('.error').remove();
+                
+                // Show loading indicator
+                $('.loading').show();
+                
+                $.ajax({
+                    url: '/plot_path',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        source_lat: sourceLat,
+                        source_lon: sourceLon,
+                        dest_lat: destLat,
+                        dest_lon: destLon
+                    }),
+                    success: function(response) {
+                        $('#flight-details').html(`
+                            <strong>Distance:</strong> ${response.distance.toFixed(2)} km<br>
+                            <strong>Flight Time:</strong> ${response.flight_time.toFixed(2)} hours<br>
+                            <strong>Fuel Consumption:</strong> ${response.fuel_consumption.toFixed(2)} liters
+                        `);
+                        $('#path-map').attr('src', 'data:text/html;base64,' + response.map_base64).show();
+                    },
+                    error: function(error) {
+                        $('#flight-details').html(`<div class="error">${error.responseJSON.error}</div>`);
+                    },
+                    complete: function() {
+                        // Hide loading indicator
+                        $('.loading').hide();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
