@@ -1,14 +1,26 @@
+/* Import the Roboto font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+
 body {
-  background-color: #f8f9fa;
+  background-image: url('assets/air-wallpaper.webp'); /* Update the path to your image */
+  background-size: cover; /* Cover the entire page */
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Don't repeat the image */
+  height: 100vh; /* Full height of the viewport */
+  margin: 0; /* Remove default margin */
+  font-family: 'Roboto', sans-serif; /* Use Roboto font */
 }
 
 .card {
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  border: none;
 }
 
 .card-title {
-  color: #007bff;
+  color: #333;
+  font-weight: bold;
 }
 
 pre {
@@ -21,4 +33,59 @@ pre {
   width: 100%;
   height: 400px;
   border-radius: 10px;
+}
+
+form {
+  margin-bottom: 20px;
+}
+
+label {
+  display: inline-block;
+  width: 150px;
+}
+
+input {
+  margin-bottom: 10px;
+}
+
+button {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+#result {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+}
+
+#plot {
+  margin-top: 20px;
+}
+
+iframe {
+  width: 100%;
+  height: 500px;
+  border: none;
+}
+
+.heading-middle {
+  display: flex;
+  justify-content: center;
+}
+
+h1 {
+  font-weight: 1000;
+  font-family: 'Roboto', sans-serif; /* Use Roboto font for headings */
 }

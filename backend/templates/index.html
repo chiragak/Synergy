@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flight Path Optimizer</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+        }
+        input {
+            margin-bottom: 10px;
+        }
+        button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        #plot {
+            margin-top: 20px;
+        }
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Flight Path Optimizer</h1>
+    <form id="flight-form">
+        <label for="current-lat">Current Latitude:</label>
+        <input type="text" id="current-lat" name="current-lat"><br>
+        <label for="current-lon">Current Longitude:</label>
+        <input type="text" id="current-lon" name="current-lon"><br>
+        <label for="altitude">Altitude (ft):</label>
+        <input type="text" id="altitude" name="altitude"><br>
+        <button type="submit">Optimize Path</button>
+    </form>
+    <div id="result"></div>
+    <h2>Path Plot</h2>
+    <form id="path-form">
+        <label for="source-lat">Source Latitude:</label>
+        <input type="text" id="source-lat" name="source-lat"><br>
+        <label for="source-lon">Source Longitude:</label>
+        <input type="text" id="source-lon" name="source-lon"><br>
+        <label for="dest-lat">Destination Latitude:</label>
+        <input type="text" id="dest-lat" name="dest-lat"><br>
+        <label for="dest-lon">Destination Longitude:</label>
+        <input type="text" id="dest-lon" name="dest-lon"><br>
+        <button type="submit">Plot Path</button>
+    </form>
+    <div id="plot">
+        <div id="flight-details"></div>
+        <iframe id="path-map" src="" style="display:none;"></iframe>
+    </div>
+    <script>
+        $(document).ready(function() {
+            $('#flight-form').on('submit', function(event) {
+                event.preventDefault();
+                const currentLat = $('#current-lat').val();
+                const currentLon = $('#current-lon').val();
+                const altitude = $('#altitude').val();
+                
+                $.ajax({
+                    url: '/predict',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        current_lat: currentLat,
+                        current_lon: currentLon,
+                        altitude: altitude
+                    }),
+                    success: function(response) {
+                        const actionDescriptions = ["Turn Left", "Turn Right", "Ascend", "Descend"];
+                        $('#result').html(`<strong>Recommended action:</strong> ${actionDescriptions[response.action]}`);
+                    },
+                    error: function(error) {
+                        $('#result').html(`<strong>Error:</strong> ${error.responseJSON.error}`);
+                    }
+                });
+            });
+
+            $('#path-form').on('submit', function(event) {
+                event.preventDefault();
+                const sourceLat = $('#source-lat').val();
+                const sourceLon = $('#source-lon').val();
+                const destLat = $('#dest-lat').val();
+                const destLon = $('#dest-lon').val();
+                
+                $.ajax({
+                    url: '/plot_path',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        source_lat: sourceLat,
+                        source_lon: sourceLon,
+                        dest_lat: destLat,
+                        dest_lon: destLon
+                    }),
+                    success: function(response) {
+                        $('#flight-details').html(`
+                            <strong>Distance:</strong> ${response.distance.toFixed(2)} km<br>
+                            <strong>Flight Time:</strong> ${response.flight_time.toFixed(2)} hours<br>
+                            <strong>Fuel Consumption:</strong> ${response.fuel_consumption.toFixed(2)} liters
+                        `);
+                        $('#path-map').attr('src', 'data:text/html;base64,' + response.map_base64).show();
+                    },
+                    error: function(error) {
+                        $('#flight-details').html(`<strong>Error:</strong> ${error.responseJSON.error}`);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

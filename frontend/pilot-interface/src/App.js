@@ -144,7 +144,8 @@ const App = () => {
 
   return (
     <div className="container">
-      <h1 className="my-4">Pilot Interface</h1>
+      <h1 className="my-4 heading-middle">Pilot Interface</h1>
+      <h1 className="my-4 heading-middle">Airline Id: {airlineId} </h1>
       <div className="card mb-4">
         <div className="card-body">
           <h2 className="card-title">Route Information</h2>
@@ -205,3 +206,4 @@ const App = () => {
 };
 
 export default App;
+

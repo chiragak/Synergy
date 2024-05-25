@@ -262,6 +262,55 @@ def approved_change_requests():
         logger.error(f"Error fetching approved change requests: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
 
+
+
+@app.route('/api/search_airports', methods=['GET'])
+def search_airports():
+    try:
+        query = request.args.get('query', '').strip()
+
+        if not query:
+            return jsonify({"error": "Query parameter is required"}), 400
+
+        # Exact match search (case-insensitive)
+        exact_matches = mongo.db.airports.find({
+            "$or": [
+                {"Name": {"$regex": f"^{query}$", "$options": "i"}},
+                {"City": {"$regex": f"^{query}$", "$options": "i"}},
+                {"Country": {"$regex": f"^{query}$", "$options": "i"}}
+            ]
+        })
+
+        # Partial match search
+        partial_matches = mongo.db.airports.find({
+            "$or": [
+                {"Name": {"$regex": query, "$options": "i"}},
+                {"City": {"$regex": query, "$options": "i"}},
+                {"Country": {"$regex": query, "$options": "i"}}
+            ]
+        })
+
+        results = []
+
+        # Add exact matches first
+        for airport in exact_matches:
+            airport['_id'] = str(airport['_id'])  # Convert ObjectId to string for JSON serialization
+            results.append(airport)
+
+        # Add partial matches, avoiding duplicates based on airport name
+        for airport in partial_matches:
+            airport_name = airport['Name']
+            if not any(result['Name'] == airport_name for result in results):
+                airport['_id'] = str(airport['_id'])  # Convert ObjectId to string for JSON serialization
+                results.append(airport)
+
+        return jsonify({"airports": results})
+
+    except Exception as e:
+        print(f"Error searching airports: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+
+
 if __name__ == '__main__':
     print("Starting Flask server...")
     app.run(debug=True)
