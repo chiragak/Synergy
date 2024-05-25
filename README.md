@@ -30,36 +30,6 @@ The Flight Navigation System is designed to enhance flight navigation by minimiz
 - **Frontend**: React, Axios, Leaflet, Bootstrap
 - **Database**: MongoDB
 
-## Folder Structure
-project-root/
-├── backend/
-│ ├── data/
-│ │ ├── airlines.csv
-│ │ ├── airplanes.csv
-│ │ ├── airports.csv
-│ │ ├── nearest_airports_details.csv
-│ │ └── routes.csv
-│ ├── utils/
-│ │ ├── init.py
-│ │ ├── weather.py
-│ │ └── route_planning.py
-│ ├── app.py
-│ ├── config.py
-│ ├── requirements.txt
-├── frontend/
-│ ├── pilot-interface/
-│ │ ├── public/
-│ │ ├── src/
-│ │ ├── package.json
-│ │ ├── package-lock.json
-│ └── atc-interface/
-│ ├── public/
-│ ├── src/
-│ ├── package.json
-│ ├── package-lock.json
-├── README.md
-
-
 ## Setup and Installation
 
 ### Backend
